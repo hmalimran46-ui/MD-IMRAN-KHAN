@@ -137,7 +137,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [about, setAbout] = useState<AboutData>({
     bioLine1: "I am MD: IMRAN KHAN, a high-performance digital marketing specialist engineered to scale web assets, e-commerce stores, and YouTube creator networks into high-revenue market leaders.",
     bioLine2: "With over 5 years of rigorous campaign testing, multi-channel growth positioning, and organic SEO development, I replace standard marketing guesswork with data-backed revenue accelerators.",
-    portraitUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600",
+    portraitUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=600",
     badgeTitle: "Top Digital Marketer",
     badgeSub: "Verified Campaign Record",
     skillsList: [

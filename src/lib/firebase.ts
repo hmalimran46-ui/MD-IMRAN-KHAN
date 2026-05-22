@@ -18,6 +18,7 @@ import {
   onSnapshot,
   getDocFromServer
 } from 'firebase/firestore';
+import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { Service, Stat, CaseStudy, Testimonial } from '../types';
 import { SERVICES_DATA, STATS_DATA, CASE_STUDIES_DATA } from '../data';
@@ -26,6 +27,14 @@ import { SERVICES_DATA, STATS_DATA, CASE_STUDIES_DATA } from '../data';
 const app = initializeApp(firebaseConfig);
 export const db: Firestore = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth: Auth = getAuth(app);
+export const storage = getStorage(app);
+
+// Upload string (Base64 data URL) to Firebase Storage and retrieve the download URL.
+export async function uploadImageToStorage(dataUrl: string, path: string): Promise<string> {
+  const storageRef = ref(storage, path);
+  await uploadString(storageRef, dataUrl, 'data_url');
+  return await getDownloadURL(storageRef);
+}
 
 // Operational Types as specified in the security/rules skill guideline
 export enum OperationType {
@@ -105,7 +114,7 @@ export async function seedDatabaseIfEmpty() {
     await setDoc(doc(db, 'content', 'about'), {
       bioLine1: "I am MD: IMRAN KHAN, a high-performance digital marketing specialist engineered to scale web assets, e-commerce stores, and YouTube creator networks into high-revenue market leaders.",
       bioLine2: "With over 5 years of rigorous campaign testing, multi-channel growth positioning, and organic SEO development, I replace standard marketing guesswork with data-backed revenue accelerators.",
-      portraitUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600",
+      portraitUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=600",
       badgeTitle: "Top Digital Marketer",
       badgeSub: "Verified Campaign Record",
       skillsList: [

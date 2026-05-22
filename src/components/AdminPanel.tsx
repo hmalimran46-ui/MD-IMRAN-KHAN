@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { useFirebase, HeroData, AboutData, OfferData, ContactData } from "./FirebaseContext";
 import { Service, CaseStudy } from "../types";
+import { uploadImageToStorage } from "../lib/firebase";
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -247,13 +248,21 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     setErrorHero(null);
     setSaveStatus("Saving hero elements...");
     const parsedPills = heroPillStr.split(",").map(p => p.trim()).filter(Boolean);
-    const updated: HeroData = {
-      badgeText: heroBadge,
-      titleLines: [heroTitle1, heroTitle2],
-      pills: parsedPills,
-      bannerUrl: heroBanner
-    };
     try {
+      let resolvedBannerUrl = heroBanner;
+      if (heroBanner && heroBanner.startsWith("data:image")) {
+        setSaveStatus("Uploading hero banner to Firebase Cloud Storage...");
+        const fileName = `hero/banner_${Date.now()}.jpg`;
+        resolvedBannerUrl = await uploadImageToStorage(heroBanner, fileName);
+      }
+
+      const updated: HeroData = {
+        badgeText: heroBadge,
+        titleLines: [heroTitle1, heroTitle2],
+        pills: parsedPills,
+        bannerUrl: resolvedBannerUrl
+      };
+
       await saveHero(updated);
       setSaveStatus("Hero parameters synced dynamically!");
       setSuccessHero("Changes Saved Successfully");
@@ -327,10 +336,19 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       const parsedSkills = JSON.parse(skillsJson);
       const parsedHighlights = JSON.parse(highlightsJson);
 
+      let resolvedPortraitUrl = aboutPortrait;
+      let portraitUploaded = false;
+      if (aboutPortrait && aboutPortrait.startsWith("data:image")) {
+        setSaveStatus("Uploading profile image to Firebase Cloud Storage...");
+        const fileName = `about/portrait_imran_${Date.now()}.jpg`;
+        resolvedPortraitUrl = await uploadImageToStorage(aboutPortrait, fileName);
+        portraitUploaded = true;
+      }
+
       const updated: AboutData = {
         bioLine1: aboutBio1,
         bioLine2: aboutBio2,
-        portraitUrl: aboutPortrait,
+        portraitUrl: resolvedPortraitUrl,
         badgeTitle: aboutBadgeTitle,
         badgeSub: aboutBadgeSub,
         skillsList: parsedSkills,
@@ -348,8 +366,15 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       };
       await saveContact(updatedContact);
 
+      // Set state with final cloud URL to prevent re-upload on next saves
+      setAboutPortrait(resolvedPortraitUrl);
+
       setSaveStatus("About bio and statistics synced dynamically!");
-      setSuccessAbout("Changes Saved Successfully");
+      if (portraitUploaded) {
+        setSuccessAbout("Profile Image Updated Successfully");
+      } else {
+        setSuccessAbout("Changes Saved Successfully");
+      }
       setTimeout(() => setSaveStatus(null), 3500);
       setTimeout(() => setSuccessAbout(null), 5000);
     } catch (e: any) {
