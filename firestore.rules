@@ -1,0 +1,166 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safe Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Reusable global helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      // Bootstrapped admin check using the user email from runtime metadata
+      // and optional administrative lookup collection for flexibility
+      return isSignedIn() && (
+        request.auth.token.email == "h.malimran46@gmail.com" || 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // 3. Validation blueprints
+    function isValidHero(data) {
+      return data.keys().hasAll(['badgeText', 'titleLines', 'pills']) &&
+             data.keys().size() == 3 &&
+             data.badgeText is string && data.badgeText.size() <= 200 &&
+             data.titleLines is list && data.titleLines.size() <= 5 &&
+             data.pills is list && data.pills.size() <= 15;
+    }
+
+    function isValidAbout(data) {
+      return data.keys().hasAll(['bioLine1', 'bioLine2', 'portraitUrl', 'badgeTitle', 'badgeSub', 'skillsList', 'highlights', 'stats']) &&
+             data.keys().size() == 8 &&
+             data.bioLine1 is string && data.bioLine1.size() <= 2000 &&
+             data.bioLine2 is string && data.bioLine2.size() <= 2000 &&
+             data.portraitUrl is string && data.portraitUrl.size() <= 2000 &&
+             data.badgeTitle is string && data.badgeTitle.size() <= 100 &&
+             data.badgeSub is string && data.badgeSub.size() <= 100 &&
+             data.skillsList is list && data.skillsList.size() <= 20 &&
+             data.highlights is list && data.highlights.size() <= 10 &&
+             data.stats is list && data.stats.size() <= 6;
+    }
+
+    function isValidOffer(data) {
+      return data.keys().hasAll(['badge', 'mainTitle', 'promoText', 'promoSubtitle', 'hours', 'minutes', 'seconds']) &&
+             data.keys().size() == 7 &&
+             data.badge is string && data.badge.size() <= 200 &&
+             data.mainTitle is string && data.mainTitle.size() <= 300 &&
+             data.promoText is string && data.promoText.size() <= 1000 &&
+             data.promoSubtitle is string && data.promoSubtitle.size() <= 1000 &&
+             data.hours is int && data.minutes is int && data.seconds is int;
+    }
+
+    function isValidContact(data) {
+      return data.keys().hasAll(['email', 'whatsappUrl', 'whatsappDisplay']) &&
+             data.keys().size() == 3 &&
+             data.email is string && data.email.size() <= 200 &&
+             data.whatsappUrl is string && data.whatsappUrl.size() <= 500 &&
+             data.whatsappDisplay is string && data.whatsappDisplay.size() <= 100;
+    }
+
+    function isValidService(data) {
+      return data.keys().hasAll(['id', 'title', 'description', 'iconName', 'benefits', 'metric']) &&
+             data.keys().size() == 6 &&
+             data.id is string && data.id.size() <= 100 &&
+             data.title is string && data.title.size() <= 200 &&
+             data.description is string && data.description.size() <= 1000 &&
+             data.iconName is string && data.iconName.size() <= 100 &&
+             data.benefits is list && data.benefits.size() <= 10 &&
+             data.metric is string && data.metric.size() <= 100;
+    }
+
+    function isValidCaseStudy(data) {
+      return data.keys().hasAll(['id', 'title', 'client', 'category', 'duration', 'challenge', 'strategy', 'highlightMetric', 'highlightLabel', 'results', 'chartData']) &&
+             data.keys().size() == 11 &&
+             data.id is string && data.id.size() <= 100 &&
+             data.title is string && data.title.size() <= 200 &&
+             data.client is string && data.client.size() <= 200 &&
+             data.category is string && data.category.size() <= 200 &&
+             data.duration is string && data.duration.size() <= 100 &&
+             data.challenge is string && data.challenge.size() <= 2000 &&
+             data.strategy is string && data.strategy.size() <= 2000 &&
+             data.highlightMetric is string && data.highlightMetric.size() <= 100 &&
+             data.highlightLabel is string && data.highlightLabel.size() <= 200 &&
+             data.results is list && data.results.size() <= 10 &&
+             data.chartData is list && data.chartData.size() <= 20;
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['id', 'name', 'email', 'serviceType', 'message', 'createdAt', 'status']) &&
+             data.keys().size() == 7 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() <= 200 &&
+             data.email is string && data.email.size() <= 200 &&
+             data.serviceType is string && data.serviceType.size() <= 200 &&
+             data.message is string && data.message.size() <= 3000 &&
+             data.createdAt is string &&
+             data.status is string && (data.status == 'new' || data.status == 'read' || data.status == 'archived');
+    }
+
+    // 4. Set matches and rules per collection for Website Content
+    // Match for singleton documents: hero, about, offers, contacts
+    match /content/hero {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidHero(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /content/about {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidAbout(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /content/offers {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidOffer(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /content/contacts {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidContact(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // Match subcollections of service and portfolio items
+    match /content/services/{serviceId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidId(serviceId) && isValidService(incoming());
+      allow delete: if isAdmin() && isValidId(serviceId);
+    }
+
+    match /content/portfolio/{projectId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidId(projectId) && isValidCaseStudy(incoming());
+      allow delete: if isAdmin() && isValidId(projectId);
+    }
+
+    // Client Inquiries messages (visitors submit inquiry, Admin views)
+    match /messages/{messageId} {
+      allow create: if isValidId(messageId) && isValidMessage(incoming());
+      allow read, update, delete: if isAdmin() && isValidId(messageId);
+    }
+
+    // Admins metadata collection
+    match /admins/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || request.auth.token.email == "h.malimran46@gmail.com");
+      allow write: if isAdmin();
+    }
+  }
+}

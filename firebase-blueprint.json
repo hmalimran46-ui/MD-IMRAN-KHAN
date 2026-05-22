@@ -1,0 +1,168 @@
+{
+  "entities": {
+    "HeroConfig": {
+      "title": "HeroConfig",
+      "description": "Configuration schema for the Hero Section on the website",
+      "type": "object",
+      "properties": {
+        "badgeText": {
+          "type": "string",
+          "description": "Text shown in the live status pill badge"
+        },
+        "titleLines": {
+          "type": "array",
+          "description": "Lines for the prominent display headline"
+        },
+        "pills": {
+          "type": "array",
+          "description": "List of core skill tags displayed as bullet items"
+        }
+      },
+      "required": ["badgeText", "titleLines", "pills"]
+    },
+    "AboutConfig": {
+      "title": "AboutConfig",
+      "description": "Static details and stats for the About segment of the platform",
+      "type": "object",
+      "properties": {
+        "bioLine1": {
+          "type": "string",
+          "description": "Primary bio summary text"
+        },
+        "bioLine2": {
+          "type": "string",
+          "description": "Secondary detailed background summary"
+        },
+        "portraitUrl": {
+          "type": "string",
+          "description": "Secure image path or link to the developer's professional headshot portrait"
+        },
+        "badgeTitle": {
+          "type": "string",
+          "description": "Float card badge title"
+        },
+        "badgeSub": {
+          "type": "string",
+          "description": "Float card badge subtitle"
+        },
+        "skillsList": {
+          "type": "array",
+          "description": "List of core specialized fields and expertise metrics with levels"
+        },
+        "highlights": {
+          "type": "array",
+          "description": "List of methodologies highlights items"
+        },
+        "stats": {
+          "type": "array",
+          "description": "List of professional stat numbers"
+        }
+      },
+      "required": ["bioLine1", "bioLine2", "portraitUrl", "badgeTitle", "badgeSub", "skillsList", "highlights", "stats"]
+    },
+    "ServiceItem": {
+      "title": "ServiceItem",
+      "description": "Dynamic service card configuration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "iconName": { "type": "string" },
+        "benefits": { "type": "array" },
+        "metric": { "type": "string" }
+      },
+      "required": ["id", "title", "description", "iconName", "benefits", "metric"]
+    },
+    "CaseStudyItem": {
+      "title": "CaseStudyItem",
+      "description": "Dynamic client case study and charts data point configuration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "client": { "type": "string" },
+        "category": { "type": "string" },
+        "duration": { "type": "string" },
+        "challenge": { "type": "string" },
+        "strategy": { "type": "string" },
+        "highlightMetric": { "type": "string" },
+        "highlightLabel": { "type": "string" },
+        "results": { "type": "array" },
+        "chartData": { "type": "array" }
+      },
+      "required": ["id", "title", "client", "category", "duration", "challenge", "strategy", "highlightMetric", "highlightLabel", "results", "chartData"]
+    },
+    "OfferConfig": {
+      "title": "OfferConfig",
+      "description": "Active promotional campaign config",
+      "type": "object",
+      "properties": {
+        "badge": { "type": "string" },
+        "mainTitle": { "type": "string" },
+        "promoText": { "type": "string" },
+        "promoSubtitle": { "type": "string" },
+        "hours": { "type": "number" },
+        "minutes": { "type": "number" },
+        "seconds": { "type": "number" }
+      },
+      "required": ["badge", "mainTitle", "promoText", "promoSubtitle", "hours", "minutes", "seconds"]
+    },
+    "ContactConfig": {
+      "title": "ContactConfig",
+      "description": "Editable contact channels like emails and interactive links",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "whatsappUrl": { "type": "string" },
+        "whatsappDisplay": { "type": "string" }
+      },
+      "required": ["email", "whatsappUrl", "whatsappDisplay"]
+    },
+    "ClientInquiryMessage": {
+      "title": "ClientInquiryMessage",
+      "description": "Form messages routed from dynamic portal visitors",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "serviceType": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["new", "read", "archived"] }
+      },
+      "required": ["id", "name", "email", "serviceType", "message", "createdAt", "status"]
+    }
+  },
+  "firestore": {
+    "content/hero": {
+      "schema": "HeroConfig",
+      "description": "Single document holding homepage hero branding layout"
+    },
+    "content/about": {
+      "schema": "AboutConfig",
+      "description": "Bio, portraits and professional stats metrics"
+    },
+    "content/offers": {
+      "schema": "OfferConfig",
+      "description": "Limiter-time discount rate promotional specifications"
+    },
+    "content/contacts": {
+      "schema": "ContactConfig",
+      "description": "Active mail addresses and custom online touch points"
+    },
+    "content/services/{serviceId}": {
+      "schema": "ServiceItem",
+      "description": "Substructure detailing selectable growth domains"
+    },
+    "content/portfolio/{projectId}": {
+      "schema": "CaseStudyItem",
+      "description": "Dynamic user project growth achievements combined with data charts arrays"
+    },
+    "messages/{messageId}": {
+      "schema": "ClientInquiryMessage",
+      "description": "Aggregated inboxes generated from customer form submissions"
+    }
+  }
+}
