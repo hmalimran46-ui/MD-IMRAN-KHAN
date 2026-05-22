@@ -146,6 +146,21 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Status warnings
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
+  // Tab-specific success / error states with beautiful localized alerts
+  const [successHero, setSuccessHero] = useState<string | null>(null);
+  const [successAbout, setSuccessAbout] = useState<string | null>(null);
+  const [successServices, setSuccessServices] = useState<string | null>(null);
+  const [successProjects, setSuccessProjects] = useState<string | null>(null);
+  const [successOffers, setSuccessOffers] = useState<string | null>(null);
+  const [successSecurity, setSuccessSecurity] = useState<string | null>(null);
+
+  const [errorHero, setErrorHero] = useState<string | null>(null);
+  const [errorAbout, setErrorAbout] = useState<string | null>(null);
+  const [errorServices, setErrorServices] = useState<string | null>(null);
+  const [errorProjects, setErrorProjects] = useState<string | null>(null);
+  const [errorOffers, setErrorOffers] = useState<string | null>(null);
+  const [errorSecurity, setErrorSecurity] = useState<string | null>(null);
+
   // Populate data when available
   useEffect(() => {
     if (hero) {
@@ -228,6 +243,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
   // Content savers
   const handleSaveHero = async () => {
+    setSuccessHero(null);
+    setErrorHero(null);
     setSaveStatus("Saving hero elements...");
     const parsedPills = heroPillStr.split(",").map(p => p.trim()).filter(Boolean);
     const updated: HeroData = {
@@ -239,9 +256,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     try {
       await saveHero(updated);
       setSaveStatus("Hero parameters synced dynamically!");
+      setSuccessHero("Changes Saved Successfully");
       setTimeout(() => setSaveStatus(null), 3500);
+      setTimeout(() => setSuccessHero(null), 5000);
     } catch (e: any) {
       setSaveStatus(`Failed write: ${e.message}`);
+      setErrorHero(e.message || "Failed to update Hero branding.");
+      setTimeout(() => setSaveStatus(null), 5000);
     }
   };
 
@@ -298,6 +319,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   };
 
   const handleSaveAboutAndStats = async () => {
+    setSuccessAbout(null);
+    setErrorAbout(null);
     setSaveStatus("Saving about and stats data...");
     try {
       const parsedStats = JSON.parse(statsJson);
@@ -326,13 +349,19 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       await saveContact(updatedContact);
 
       setSaveStatus("About bio and statistics synced dynamically!");
+      setSuccessAbout("Changes Saved Successfully");
       setTimeout(() => setSaveStatus(null), 3500);
+      setTimeout(() => setSuccessAbout(null), 5000);
     } catch (e: any) {
       setSaveStatus(`Error formatting: ${e.message}. Verify strict JSON array shapes.`);
+      setErrorAbout(e.message || "Failed to format properties or update Bio configuration. Ensure JSON values are valid arrays.");
+      setTimeout(() => setSaveStatus(null), 5000);
     }
   };
 
   const handleSaveOffer = async () => {
+    setSuccessOffers(null);
+    setErrorOffers(null);
     setSaveStatus("Updating and syncing promotional banner campaign...");
     const updated: OfferData = {
       badge: offerBadge,
@@ -346,16 +375,22 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     try {
       await saveOffer(updated);
       setSaveStatus("Campaign details synchronized across all nodes!");
+      setSuccessOffers("Changes Saved Successfully");
       setTimeout(() => setSaveStatus(null), 3500);
+      setTimeout(() => setSuccessOffers(null), 5000);
     } catch (e: any) {
-      setSaveStatus(`Failed: ${e.message}`);
+      setSaveStatus(`Failed write: ${e.message}`);
+      setErrorOffers(e.message || "Failed to update promotional campaign.");
+      setTimeout(() => setSaveStatus(null), 5000);
     }
   };
 
   // Managing Services subcollection items
   const handleAddService = async () => {
+    setSuccessServices(null);
+    setErrorServices(null);
     if (!newService.id || !newService.title || !newService.description) {
-      alert("Please ensure the service ID, Title, and Description are defined.");
+      setErrorServices("Please ensure the service ID, Title, and Description are defined.");
       return;
     }
     const serviceToSave: Service = {
@@ -372,9 +407,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       setNewService({ id: "", title: "", description: "", iconName: "Search", benefits: [], metric: "" });
       setBenefitInput("");
       setSaveStatus("Service successfully created!");
+      setSuccessServices("Changes Saved Successfully");
       setTimeout(() => setSaveStatus(null), 3500);
+      setTimeout(() => setSuccessServices(null), 5000);
     } catch (e: any) {
-      alert(e.message);
+      setSaveStatus(`Failed: ${e.message}`);
+      setErrorServices(e.message || "Failed to add service item.");
+      setTimeout(() => setSaveStatus(null), 5000);
     }
   };
 
@@ -398,8 +437,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   };
 
   const handleAddProject = async () => {
+    setSuccessProjects(null);
+    setErrorProjects(null);
     if (!newProject.id || !newProject.title || !newProject.client) {
-      alert("Fill out core Project Details (ID, Title, Client, Category) first.");
+      setErrorProjects("Fill out core Project Details (ID, Title, Client, Category) first.");
       return;
     }
 
@@ -442,9 +483,37 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       });
       setResultInput("");
       setSaveStatus("Case study portfolio loaded live successfully!");
+      setSuccessProjects("Changes Saved Successfully");
       setTimeout(() => setSaveStatus(null), 3500);
+      setTimeout(() => setSuccessProjects(null), 5000);
     } catch (e: any) {
-      alert(e.message);
+      setSaveStatus(`Failed: ${e.message}`);
+      setErrorProjects(e.message || "Failed to add portfolio card.");
+      setTimeout(() => setSaveStatus(null), 5000);
+    }
+  };
+
+  const handleDeleteService = async (id: string) => {
+    setSuccessServices(null);
+    setErrorServices(null);
+    try {
+      await removeService(id);
+      setSuccessServices("Changes Saved Successfully");
+      setTimeout(() => setSuccessServices(null), 5000);
+    } catch (e: any) {
+      setErrorServices(e.message || "Failed to remove service.");
+    }
+  };
+
+  const handleDeleteProject = async (id: string) => {
+    setSuccessProjects(null);
+    setErrorProjects(null);
+    try {
+      await removeProject(id);
+      setSuccessProjects("Changes Saved Successfully");
+      setTimeout(() => setSuccessProjects(null), 5000);
+    } catch (e: any) {
+      setErrorProjects(e.message || "Failed to remove case study.");
     }
   };
 
@@ -771,13 +840,35 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   )}
                 </div>
               </div>
-            )}
-
-            {/* HERO & ABOUT BIO WORKSPACE */}
+            )}            {/* HERO & ABOUT BIO WORKSPACE */}
             {activeTab === "heroAbout" && (
-              <div className="space-y-8 animate-fade-in text-left max-w-4xl">
-                <div className="space-y-5">
+              <div className="space-y-8 animate-fade-in text-left max-w-4xl pb-10">
+                
+                {/* Hero Section */}
+                <div className="space-y-5 bg-[#090724]/30 p-6 rounded-3xl border border-white/5 shadow-xl relative backdrop-blur-md">
+                  <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/25 text-[#06b6d4] text-[9px] font-mono uppercase font-bold tracking-wider select-none">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    ● Live Sync Active
+                  </div>
+
                   <h3 className="font-display font-medium text-lg text-white border-b border-white/5 pb-2">Hero Section Branding</h3>
+
+                  {/* Success indicator for Hero Branding */}
+                  {successHero && (
+                    <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-xs font-sans flex items-center gap-2.5 shadow-[0_0_15px_rgba(16,185,129,0.05)] animate-fade-in select-none">
+                      <CheckCircle className="h-4.5 w-4.5 text-emerald-400 shrink-0 animate-bounce" />
+                      <div className="flex-1">
+                        <span className="font-bold block text-emerald-300">Changes Saved Successfully</span>
+                        <span className="text-[10px] text-gray-400 mt-0.5 block">Hero database configurations synced dynamically on live nodes.</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {errorHero && (
+                    <div className="p-3.5 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500/10 text-red-400 text-xs font-sans leading-normal">
+                      Error: {errorHero}
+                    </div>
+                  )}
                   
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-400" htmlFor="hero-badge">Pill Badge Text</label>
@@ -841,6 +932,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         className="w-full px-4.5 py-3 rounded-xl bg-[#030014]/60 border border-white/10 text-white font-sans text-sm focus:border-cyan-400 outline-none transition-colors"
                       />
                     </div>
+
+                    {/* Banner Presets Preview Box */}
                     <div 
                       className="relative group border border-dashed border-white/15 hover:border-cyan-400/50 rounded-2xl p-6 bg-[#030014]/40 flex flex-col items-center justify-center gap-2 transition-all duration-300 overflow-hidden cursor-pointer select-none"
                       onDragOver={(e) => {
@@ -874,7 +967,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                           <img 
                             src={heroBanner} 
                             alt="Banner Preview" 
-                            className="w-full h-full object-cover opacity-20 filter blur-[0.5px] transition-all group-hover:scale-[1.02]"
+                            className="w-full h-full object-cover opacity-30 filter blur-[0.5px] transition-all group-hover:scale-[1.02]"
                           />
                           <div className="absolute inset-0 bg-[#030014]/50" />
                         </div>
@@ -890,24 +983,48 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                           <span className="block font-sans text-[10px] text-gray-400 mt-0.5">
                             Or click to upload from folder system
                           </span>
-                          <span className="inline-block mt-2 px-2 py-0.5 rounded bg-white/5 border border-white/5 font-mono text-[8px] text-gray-500">
-                            Fitted aspect autoscaler system active
-                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <button
-                    onClick={handleSaveHero}
-                    className="px-6 py-3 rounded-xl bg-cyan-400 text-black text-xs font-bold uppercase tracking-wider hover:bg-cyan-300 transition-colors cursor-pointer flex items-center gap-2 shadow-[0_4px_15px_rgba(6,182,212,0.2)]"
-                  >
-                    <Check className="h-4 w-4" /> Save Hero slates
-                  </button>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      onClick={handleSaveHero}
+                      className="px-6 py-3 rounded-xl bg-cyan-400 text-black text-xs font-bold uppercase tracking-wider hover:bg-cyan-300 transition-colors cursor-pointer flex items-center gap-2 shadow-[0_4px_15px_rgba(6,182,212,0.2)]"
+                    >
+                      <Check className="h-4 w-4" /> Save Hero settings
+                    </button>
+                    <span className="text-[10px] text-gray-500 font-mono">
+                      Real-time database triggers loaded
+                    </span>
+                  </div>
                 </div>
 
-                <div className="space-y-6 pt-6 border-t border-white/5">
+                <div className="space-y-6 pt-6 bg-[#090724]/35 p-6 rounded-3xl border border-white/5 shadow-xl relative backdrop-blur-md">
+                  <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/25 text-[#06b6d4] text-[9px] font-mono uppercase font-bold tracking-wider select-none">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    ● Live Sync Active
+                  </div>
+
                   <h3 className="font-display font-medium text-lg text-white border-b border-white/5 pb-2">About Segment</h3>
+
+                  {/* Success indicator for About Segment */}
+                  {successAbout && (
+                    <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-xs font-sans flex items-center gap-2.5 shadow-[0_0_15px_rgba(16,185,129,0.05)] animate-fade-in select-none">
+                      <CheckCircle className="h-4.5 w-4.5 text-emerald-400 shrink-0 animate-bounce" />
+                      <div className="flex-1">
+                        <span className="font-bold block text-emerald-300">Changes Saved Successfully</span>
+                        <span className="text-[10px] text-gray-400 mt-0.5 block">About bio details and portrait configs synced dynamically!</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {errorAbout && (
+                    <div className="p-3.5 rounded-xl border border-red-500/20 bg-red-400/5 text-red-150 text-xs font-sans leading-normal">
+                      Error: {errorAbout}
+                    </div>
+                  )}
                   
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-400" htmlFor="about-bio1">Main bio text paragraph</label>
@@ -946,87 +1063,136 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       />
                     </div>
 
-                    {/* Highly Professional Drag-and-Drop Image Uploader */}
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-gray-400">Upload Premium Headshot Image</label>
-                      <div 
-                        className="relative group border border-dashed border-white/15 hover:border-cyan-400/50 rounded-2xl p-6 bg-[#030014]/40 flex flex-col items-center justify-center gap-2 transition-all duration-300 overflow-hidden cursor-pointer select-none"
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const files = e.dataTransfer.files;
-                          if (files && files[0]) {
-                            handleOptimizedImageUpload(files[0], "portrait", setAboutPortrait);
-                          }
-                        }}
-                        onClick={() => {
-                          const fileInput = document.createElement("input");
-                          fileInput.type = "file";
-                          fileInput.accept = "image/*";
-                          fileInput.onchange = (e) => {
-                            const target = e.target as HTMLInputElement;
-                            const files = target.files;
+                    {/* Upload preview / image preview displays immediately */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Drag-and-Drop Column */}
+                      <div className="md:col-span-2 space-y-1.5">
+                        <label className="block text-xs font-semibold text-gray-400">Upload Premium Headshot Image</label>
+                        <div 
+                          className="relative h-44 group border border-dashed border-white/15 hover:border-cyan-400/50 rounded-2xl p-6 bg-[#030014]/40 flex flex-col items-center justify-center gap-2 transition-all duration-300 overflow-hidden cursor-pointer select-none"
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const files = e.dataTransfer.files;
                             if (files && files[0]) {
                               handleOptimizedImageUpload(files[0], "portrait", setAboutPortrait);
                             }
-                          };
-                          fileInput.click();
-                        }}
-                      >
-                        {aboutPortrait && (
-                          <div className="absolute inset-0 z-0">
-                            <img 
-                              src={aboutPortrait} 
-                              alt="Headshot Preview" 
-                              className="w-full h-full object-cover opacity-20 filter blur-[0.5px] transition-all group-hover:scale-[1.02]"
-                            />
-                            <div className="absolute inset-0 bg-[#030014]/50" />
+                          }}
+                          onClick={() => {
+                            const fileInput = document.createElement("input");
+                            fileInput.type = "file";
+                            fileInput.accept = "image/*";
+                            fileInput.onchange = (e) => {
+                              const target = e.target as HTMLInputElement;
+                              const files = target.files;
+                              if (files && files[0]) {
+                                handleOptimizedImageUpload(files[0], "portrait", setAboutPortrait);
+                              }
+                            };
+                            fileInput.click();
+                          }}
+                        >
+                          {aboutPortrait && (
+                            <div className="absolute inset-0 z-0">
+                              <img 
+                                src={aboutPortrait} 
+                                alt="Headshot Preview" 
+                                className="w-full h-full object-cover opacity-20 filter blur-[0.5px] transition-all group-hover:scale-[1.02]"
+                              />
+                              <div className="absolute inset-0 bg-[#030014]/50" />
+                            </div>
+                          )}
+                          <div className="relative z-10 flex flex-col items-center justify-center text-center gap-1.5">
+                            <div className="h-9 w-9 rounded-xl bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+                              <Upload className="h-4.5 w-4.5" />
+                            </div>
+                            <div>
+                              <span className="block font-sans text-xs font-semibold text-white">
+                                Drag & drop profile picture here
+                              </span>
+                              <span className="block font-sans text-[10px] text-gray-400 mt-0.5">
+                                Or click to upload from folder system
+                              </span>
+                            </div>
                           </div>
-                        )}
-                        <div className="relative z-10 flex flex-col items-center justify-center text-center gap-1.5">
-                          <div className="h-9 w-9 rounded-xl bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 flex items-center justify-center group-hover:scale-105 transition-transform">
-                            <Upload className="h-4.5 w-4.5" />
-                          </div>
-                          <div>
-                            <span className="block font-sans text-xs font-semibold text-white">
-                              Drag & drop profile picture here
-                            </span>
-                            <span className="block font-sans text-[10px] text-gray-400 mt-0.5">
-                              Or click to upload from folder system
-                            </span>
-                            <span className="inline-block mt-2 px-2 py-0.5 rounded bg-white/5 border border-white/5 font-mono text-[8px] text-gray-500">
-                              Autoscale crop and canvas fitting engine active
-                            </span>
-                          </div>
+                        </div>
+                      </div>
+
+                      {/* Explicit Interactive Upload Preview Card */}
+                      <div className="space-y-1.5 flex flex-col">
+                        <label className="block text-xs font-semibold text-gray-400">Upload Image Preview</label>
+                        <div className="flex-1 min-h-44 border border-white/10 rounded-2xl bg-[#030014]/40 flex flex-col items-center justify-center relative overflow-hidden group">
+                          {aboutPortrait ? (
+                            <>
+                              <img 
+                                src={aboutPortrait} 
+                                alt="Live Portrait Thumbnail" 
+                                className="w-full h-full object-cover grayscale-0 transition-transform duration-500 group-hover:scale-105"
+                                referrerPolicy="no-referrer"
+                              />
+                              <div className="absolute bottom-2 inset-x-2 p-2 rounded-xl bg-[#02010a]/90 border border-white/5 text-[9px] font-mono text-center text-cyan-400 uppercase tracking-wider select-none font-bold">
+                                Current Active Shape
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-center font-mono text-[10px] text-gray-600 uppercase p-4">
+                              <span>No portrait selected</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Highly Professional Curated Presets Library */}
-                    <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                      <span className="block font-mono text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">
-                        Curated Visual Headshots Presets Library (Click to Apply)
+                    {/* Curated Presets Library */}
+                    <div className="p-4 bg-[#090724]/40 border border-white/10 rounded-2xl">
+                      <span className="block font-mono text-[9px] text-[#06b6d4] uppercase tracking-wider font-bold mb-3">
+                        Curated Visual Headshots Presets Library (Click to Fast Apply)
                       </span>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         {visualPresets.map((preset) => (
                           <div
                             key={preset.title}
                             onClick={() => setAboutPortrait(preset.url)}
-                            className="p-2 bg-[#090724] border border-white/10 hover:border-cyan-400 rounded-lg cursor-pointer text-center group flex flex-col items-center justify-between transition-all"
+                            className={`p-2 rounded-xl border transition-all duration-300 text-center group flex flex-col items-center justify-between cursor-pointer ${
+                              aboutPortrait === preset.url
+                                ? "bg-cyan-500/10 border-cyan-400"
+                                : "bg-[#030014] border-white/5 hover:border-cyan-400/50"
+                            }`}
                           >
-                            <img src={preset.url} alt="headshot mockup" className="w-12 h-12 object-cover rounded-md mb-2 group-hover:scale-105 transition-all" />
+                            <img src={preset.url} alt="headshot mockup" className="w-12 h-12 object-cover rounded-lg mb-2 group-hover:scale-105 transition-all" />
                             <span className="font-sans text-[9px] text-gray-400 group-hover:text-cyan-400 leading-snug">{preset.title}</span>
                           </div>
                         ))}
                       </div>
                     </div>
+
+                    {/* The Explicit and Professional "Save Changes" Button requested specifically for Admin About & picture uploaders */}
+                    <div className="p-4.5 bg-[#06b6d4]/5 border border-[#06b6d4]/20 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="space-y-1">
+                        <span className="block font-sans text-xs font-bold text-white">Save Headshot Portrait & Bio</span>
+                        <p className="font-sans text-[11px] text-gray-400 leading-normal">
+                          Permanently commit portrait edits and text modifications instantly to live server nodes database.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <button
+                          onClick={handleSaveAboutAndStats}
+                          className="px-6 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-1.5 shadow-[0_0_20px_rgba(6,182,212,0.3)] active:scale-95 cursor-pointer font-sans"
+                        >
+                          <Check className="h-4.5 w-4.5" /> Save Changes
+                        </button>
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#030014] border border-white/5 font-mono text-[9px] text-[#06b6d4] font-bold uppercase tracking-tight">
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse inline-block mr-1" /> Live Sync
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
                     <div className="space-y-1.5">
                       <label className="block text-xs font-semibold text-gray-400" htmlFor="about-bt">Portrait Float Badge Title</label>
                       <input
@@ -1119,7 +1285,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
                   <button
                     onClick={handleSaveAboutAndStats}
-                    className="px-6 py-3 rounded-xl bg-cyan-400 text-black text-xs font-bold uppercase tracking-wider hover:bg-cyan-300 transition-colors cursor-pointer flex items-center gap-2 shadow-[0_4px_15px_rgba(6,182,212,0.2)]"
+                    className="px-6 py-3.5 rounded-xl bg-[#030014] border border-cyan-400 text-cyan-400 hover:bg-cyan-500/10 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.1)] active:scale-95"
                   >
                     <Check className="h-4 w-4" /> Save About & Statistics Configuration
                   </button>
@@ -1129,9 +1295,30 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
             {/* SERVICES GROWTH CARDS WORKSPACE */}
             {activeTab === "services" && (
-              <div className="space-y-8 animate-fade-in text-left max-w-4xl">
-                <div className="space-y-6">
+              <div className="space-y-8 animate-fade-in text-left max-w-4xl pb-10">
+                <div className="space-y-6 bg-[#090724]/30 p-6 rounded-3xl border border-white/5 shadow-xl relative backdrop-blur-md">
+                  <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/25 text-[#06b6d4] text-[9px] font-mono uppercase font-bold tracking-wider select-none">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    ● Live Sync Active
+                  </div>
+
                   <h3 className="font-display font-medium text-lg text-white border-b border-white/5 pb-2">Add New High-converting Growth Service</h3>
+
+                  {successServices && (
+                    <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-xs font-sans flex items-center gap-2.5 shadow-[0_0_15px_rgba(16,185,129,0.05)] animate-fade-in select-none">
+                      <CheckCircle className="h-4.5 w-4.5 text-emerald-400 shrink-0 animate-bounce" />
+                      <div className="flex-1">
+                        <span className="font-bold block text-emerald-300">Changes Saved Successfully</span>
+                        <span className="text-[10px] text-gray-400 mt-0.5 block">Services configurations synced dynamically across all visitor sessions.</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {errorServices && (
+                    <div className="p-3.5 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-xs font-sans leading-normal">
+                      Error: {errorServices}
+                    </div>
+                  )}
                   
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="space-y-1.5">
@@ -1263,9 +1450,30 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
             {/* PORTFOLIO CASE STUDIES WORKSPACE */}
             {activeTab === "projects" && (
-              <div className="space-y-8 animate-fade-in text-left max-w-4xl">
-                <div className="space-y-6">
+              <div className="space-y-8 animate-fade-in text-left max-w-4xl pb-10">
+                <div className="space-y-6 bg-[#090724]/30 p-6 rounded-3xl border border-white/5 shadow-xl relative backdrop-blur-md">
+                  <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/25 text-[#06b6d4] text-[9px] font-mono uppercase font-bold tracking-wider select-none">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    ● Live Sync Active
+                  </div>
+
                   <h3 className="font-display font-medium text-lg text-white border-b border-white/5 pb-2">Add New Client Case Study & Live Growth Chart</h3>
+
+                  {successProjects && (
+                    <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-xs font-sans flex items-center gap-2.5 shadow-[0_0_15px_rgba(16,185,129,0.05)] animate-fade-in select-none">
+                      <CheckCircle className="h-4.5 w-4.5 text-emerald-400 shrink-0 animate-bounce" />
+                      <div className="flex-1">
+                        <span className="font-bold block text-emerald-300">Changes Saved Successfully</span>
+                        <span className="text-[10px] text-gray-400 mt-0.5 block">Portfolio case studies synced dynamically on live database curves.</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {errorProjects && (
+                    <div className="p-3.5 rounded-xl border border-red-500/20 bg-red-500/5 text-red-150 text-xs font-sans leading-normal">
+                      Error: {errorProjects}
+                    </div>
+                  )}
                   
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="space-y-1.5">
@@ -1469,14 +1677,35 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
             {/* DYNAMIC CAMPAIGN OFFERS WORKSPACE */}
             {activeTab === "offers" && (
-              <div className="space-y-8 animate-fade-in text-left max-w-3xl">
-                <div className="space-y-6">
+              <div className="space-y-8 animate-fade-in text-left max-w-3xl pb-10">
+                <div className="space-y-6 bg-[#090724]/30 p-6 rounded-3xl border border-white/5 shadow-xl relative backdrop-blur-md">
+                  <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/25 text-[#06b6d4] text-[9px] font-mono uppercase font-bold tracking-wider select-none">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    ● Live Sync Active
+                  </div>
+
                   <div className="border-b border-white/5 pb-2">
                     <h3 className="font-display font-medium text-lg text-white">Interactive Promotional Offer Setup</h3>
                     <p className="font-sans text-xs text-gray-400 mt-1">
                       Instantly change active promotions and countdown clocks shown inside the glowing special campaign banners cards.
                     </p>
                   </div>
+
+                  {successOffers && (
+                    <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-xs font-sans flex items-center gap-2.5 shadow-[0_0_15px_rgba(16,185,129,0.05)] animate-fade-in select-none">
+                      <CheckCircle className="h-4.5 w-4.5 text-emerald-400 shrink-0 animate-bounce" />
+                      <div className="flex-1">
+                        <span className="font-bold block text-emerald-300">Changes Saved Successfully</span>
+                        <span className="text-[10px] text-gray-400 mt-0.5 block">Promotional campaigns and active clocks updated in real-time.</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {errorOffers && (
+                    <div className="p-3.5 rounded-xl border border-red-500/20 bg-red-500/5 text-red-00 text-xs font-sans leading-normal">
+                      Error: {errorOffers}
+                    </div>
+                  )}
 
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-400" htmlFor="off-badge">Promotion badge name</label>
@@ -1662,7 +1891,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
             {/* CREDENTIALS PASSWORD CHANGE SETUP WORKSPACE */}
             {activeTab === "security" && (
-              <div className="space-y-6 animate-fade-in text-left max-w-md">
+              <div className="space-y-6 animate-fade-in text-left max-w-md pb-10">
                 <div className="border-b border-white/5 pb-2">
                   <h3 className="font-display font-medium text-lg text-white">Credentials Maintenance Panel</h3>
                   <p className="font-sans text-xs text-gray-400 mt-1">
@@ -1672,8 +1901,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
                 <form onSubmit={handleUpdatePassword} className="space-y-5">
                   {profileSuccess && (
-                    <div className="p-3.5 rounded-xl border border-[#25d366]/10 bg-[#25d366]/5 text-[#25d366] text-xs text-left leading-normal">
-                      {profileSuccess}
+                    <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-xs font-sans flex items-center gap-2.5 shadow-[0_0_15px_rgba(16,185,129,0.05)] animate-fade-in">
+                      <CheckCircle className="h-4.5 w-4.5 text-emerald-400 shrink-0" />
+                      <div>
+                        <span className="font-bold block text-emerald-300">Changes Saved Successfully</span>
+                        <span className="text-[10px] text-gray-400 mt-0.5 block">{profileSuccess}</span>
+                      </div>
                     </div>
                   )}
 
