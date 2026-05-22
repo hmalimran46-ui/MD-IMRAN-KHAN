@@ -72,7 +72,8 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     path
   };
   console.error('Firestore Secure Audit: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  // Log the audit information gently; throwing inside an active onSnapshot subscriber
+  // will crash the entire root React component rendering sequence, leading to blank pages.
 }
 
 // Connection Validation Test
