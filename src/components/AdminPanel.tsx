@@ -162,6 +162,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [errorOffers, setErrorOffers] = useState<string | null>(null);
   const [errorSecurity, setErrorSecurity] = useState<string | null>(null);
 
+  const [aboutSaving, setAboutSaving] = useState(false);
+
   // Populate data when available
   useEffect(() => {
     if (hero) {
@@ -331,18 +333,17 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     setSuccessAbout(null);
     setErrorAbout(null);
     setSaveStatus("Saving about and stats data...");
+    setAboutSaving(true);
     try {
       const parsedStats = JSON.parse(statsJson);
       const parsedSkills = JSON.parse(skillsJson);
       const parsedHighlights = JSON.parse(highlightsJson);
 
       let resolvedPortraitUrl = aboutPortrait;
-      let portraitUploaded = false;
       if (aboutPortrait && aboutPortrait.startsWith("data:image")) {
         setSaveStatus("Uploading profile image to Firebase Cloud Storage...");
         const fileName = `about/portrait_imran_${Date.now()}.jpg`;
         resolvedPortraitUrl = await uploadImageToStorage(aboutPortrait, fileName);
-        portraitUploaded = true;
       }
 
       const updated: AboutData = {
@@ -370,17 +371,15 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       setAboutPortrait(resolvedPortraitUrl);
 
       setSaveStatus("About bio and statistics synced dynamically!");
-      if (portraitUploaded) {
-        setSuccessAbout("Profile Image Updated Successfully");
-      } else {
-        setSuccessAbout("Changes Saved Successfully");
-      }
+      setSuccessAbout("Profile Image Saved Successfully");
       setTimeout(() => setSaveStatus(null), 3500);
       setTimeout(() => setSuccessAbout(null), 5000);
     } catch (e: any) {
       setSaveStatus(`Error formatting: ${e.message}. Verify strict JSON array shapes.`);
       setErrorAbout(e.message || "Failed to format properties or update Bio configuration. Ensure JSON values are valid arrays.");
       setTimeout(() => setSaveStatus(null), 5000);
+    } finally {
+      setAboutSaving(false);
     }
   };
 
@@ -1032,15 +1031,15 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     ● Live Sync Active
                   </div>
 
-                  <h3 className="font-display font-medium text-lg text-white border-b border-white/5 pb-2">About Segment</h3>
+                  <h3 className="font-display font-bold text-lg text-white border-b border-white/5 pb-2">Biography / About Info</h3>
 
                   {/* Success indicator for About Segment */}
                   {successAbout && (
                     <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-xs font-sans flex items-center gap-2.5 shadow-[0_0_15px_rgba(16,185,129,0.05)] animate-fade-in select-none">
                       <CheckCircle className="h-4.5 w-4.5 text-emerald-400 shrink-0 animate-bounce" />
                       <div className="flex-1">
-                        <span className="font-bold block text-emerald-300">Changes Saved Successfully</span>
-                        <span className="text-[10px] text-gray-400 mt-0.5 block">About bio details and portrait configs synced dynamically!</span>
+                        <span className="font-bold block text-emerald-300">{successAbout}</span>
+                        <span className="text-[10px] text-gray-400 mt-0.5 block">Biography details and portrait configurations synced dynamically!</span>
                       </div>
                     </div>
                   )}
@@ -1196,19 +1195,26 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     </div>
 
                     {/* The Explicit and Professional "Save Changes" Button requested specifically for Admin About & picture uploaders */}
-                    <div className="p-4.5 bg-[#06b6d4]/5 border border-[#06b6d4]/20 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="p-4.5 bg-[#06b6d4]/5 border border-[#06b6d4]/20 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-[0_0_20px_rgba(6,182,212,0.05)] hover:shadow-[0_0_25px_rgba(6,182,212,0.1)] transition-all">
                       <div className="space-y-1">
-                        <span className="block font-sans text-xs font-bold text-white">Save Headshot Portrait & Bio</span>
+                        <span className="block font-sans text-xs font-bold text-white uppercase tracking-wider">Biography & Picture Sync</span>
                         <p className="font-sans text-[11px] text-gray-400 leading-normal">
-                          Permanently commit portrait edits and text modifications instantly to live server nodes database.
+                          Permanently commit portrait edits and text modifications instantly to live database.
                         </p>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <button
+                          type="button"
+                          disabled={aboutSaving}
                           onClick={handleSaveAboutAndStats}
-                          className="px-6 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-1.5 shadow-[0_0_20px_rgba(6,182,212,0.3)] active:scale-95 cursor-pointer font-sans"
+                          className="px-6 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:bg-cyan-900 disabled:text-cyan-400 text-black text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-1.5 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] active:scale-95 disabled:pointer-events-none cursor-pointer font-sans"
                         >
-                          <Check className="h-4.5 w-4.5" /> Save Changes
+                          {aboutSaving ? (
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Check className="h-4.5 w-4.5" />
+                          )}
+                          {aboutSaving ? "Saving..." : "Save Changes"}
                         </button>
                         <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#030014] border border-white/5 font-mono text-[9px] text-[#06b6d4] font-bold uppercase tracking-tight">
                           <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse inline-block mr-1" /> Live Sync
@@ -1309,10 +1315,17 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </div>
 
                   <button
+                    type="button"
+                    disabled={aboutSaving}
                     onClick={handleSaveAboutAndStats}
-                    className="px-6 py-3.5 rounded-xl bg-[#030014] border border-cyan-400 text-cyan-400 hover:bg-cyan-500/10 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.1)] active:scale-95"
+                    className="px-6 py-3.5 rounded-xl bg-[#030014] border border-cyan-400 text-cyan-400 hover:bg-cyan-500/10 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] disabled:opacity-50 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.1)] active:scale-95 disabled:pointer-events-none"
                   >
-                    <Check className="h-4 w-4" /> Save About & Statistics Configuration
+                    {aboutSaving ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="h-4 w-4" />
+                    )}
+                    {aboutSaving ? "Saving Changes..." : "Save About & Statistics Configuration"}
                   </button>
                 </div>
               </div>

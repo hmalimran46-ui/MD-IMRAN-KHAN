@@ -388,6 +388,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       await setDoc(doc(db, "content", "hero"), data);
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, "content/hero");
+      throw e;
     }
   };
 
@@ -396,6 +397,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       await setDoc(doc(db, "content", "about"), data);
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, "content/about");
+      throw e;
     }
   };
 
@@ -404,6 +406,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       await setDoc(doc(db, "content", "offers"), data);
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, "content/offers");
+      throw e;
     }
   };
 
@@ -412,6 +415,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       await setDoc(doc(db, "content", "contacts"), data);
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, "content/contacts");
+      throw e;
     }
   };
 
@@ -420,6 +424,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       await setDoc(doc(db, "content", "services", service.id), service);
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, `content/services/${service.id}`);
+      throw e;
     }
   };
 
@@ -428,6 +433,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       await deleteDoc(doc(db, "content", "services", id));
     } catch (e) {
       handleFirestoreError(e, OperationType.DELETE, `content/services/${id}`);
+      throw e;
     }
   };
 
@@ -436,6 +442,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       await setDoc(doc(db, "content", "portfolio", project.id), project);
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, `content/portfolio/${project.id}`);
+      throw e;
     }
   };
 
@@ -444,6 +451,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       await deleteDoc(doc(db, "content", "portfolio", id));
     } catch (e) {
       handleFirestoreError(e, OperationType.DELETE, `content/portfolio/${id}`);
+      throw e;
     }
   };
 
@@ -464,6 +472,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       await setDoc(doc(db, "messages", id), data);
     } catch (e) {
       handleFirestoreError(e, OperationType.CREATE, `messages/${id}`);
+      throw e;
     }
   };
 
@@ -472,6 +481,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       await updateDoc(doc(db, "messages", id), { status: state });
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, `messages/${id}`);
+      throw e;
     }
   };
 
@@ -480,6 +490,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       await deleteDoc(doc(db, "messages", id));
     } catch (e) {
       handleFirestoreError(e, OperationType.DELETE, `messages/${id}`);
+      throw e;
     }
   };
 
