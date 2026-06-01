@@ -51,24 +51,63 @@ export default function Contact() {
         formData.message
       );
 
-      // 2. Also construct mailto link as backup for client-trigger notifications
       const receiver = contact.email || "h.malimran46@gmail.com";
-      const subject = encodeURIComponent(`[INBOX GROWTH AUDIT] from ${formData.name}`);
       const selectedService = serviceOptions.find(o => o.value === formData.serviceType)?.label || formData.serviceType;
-      const body = encodeURIComponent(
-        `Hello MD: IMRAN KHAN,\n\nMy name is ${formData.name} (${formData.email}).\nI am reaching out regarding your "${selectedService}" services.\n\nMessage Details:\n"${formData.message}"\n\nKind regards,\n${formData.name}`
-      );
       
-      const mailtoUrl = `mailto:${receiver}?subject=${subject}&body=${body}`;
+      // Try background dispatch via Web3Forms if Key is registered
+      const notificationKey = contact.web3formsKey || "";
+      let sentViaApi = false;
+
+      if (notificationKey) {
+        try {
+          const response = await fetch("https://api.web3forms.com/submit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({
+              access_key: notificationKey,
+              name: formData.name,
+              email: formData.email,
+              subject: `[IMRAN CONTROL GATEWAY] New inquiry from ${formData.name}`,
+              from_name: "MD Imran Khan Portfolio Portal",
+              message: `You received a new inquiry on your website:
+
+Name: ${formData.name}
+Email: ${formData.email}
+Growth Program: ${selectedService}
+Date & Time: ${new Date().toLocaleString()}
+
+Message Details:
+"${formData.message}"`
+            })
+          });
+          const apiJSON = await response.json();
+          if (apiJSON.success) {
+            sentViaApi = true;
+          }
+        } catch (apiErr) {
+          console.error("Web3Forms automatic direct mailer failure: ", apiErr);
+        }
+      }
 
       setStatus("success");
       
-      // Open mail client in background as custom alert overlay
-      setTimeout(() => {
-        try {
-          window.location.href = mailtoUrl;
-        } catch (_) {}
-      }, 1500);
+      // Only trigger mailto popup if Web3Forms key was NOT configured or failed
+      if (!sentViaApi) {
+        const subject = encodeURIComponent(`[INBOX GROWTH AUDIT] from ${formData.name}`);
+        const body = encodeURIComponent(
+          `Hello MD: IMRAN KHAN,\n\nMy name is ${formData.name} (${formData.email}).\nI am reaching out regarding your "${selectedService}" services.\n\nMessage Details:\n"${formData.message}"\n\nKind regards,\n${formData.name}`
+        );
+        const mailtoUrl = `mailto:${receiver}?subject=${subject}&body=${body}`;
+        
+        setTimeout(() => {
+          try {
+            window.location.href = mailtoUrl;
+          } catch (_) {}
+        }, 1500);
+      }
 
     } catch (err: any) {
       console.error(err);

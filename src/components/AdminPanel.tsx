@@ -103,6 +103,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [contactEmail, setContactEmail] = useState("");
   const [contactWa, setContactWa] = useState("");
   const [contactWaDisplay, setContactWaDisplay] = useState("");
+  const [contactWeb3formsKey, setContactWeb3formsKey] = useState("");
 
   // Statistics counters state
   const [statsJson, setStatsJson] = useState("");
@@ -187,6 +188,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       setContactEmail(contact.email || "h.malimran46@gmail.com");
       setContactWa(contact.whatsappUrl || "https://wa.me/8801700000000");
       setContactWaDisplay(contact.whatsappDisplay || "+880 1700-000000");
+      setContactWeb3formsKey(contact.web3formsKey || "");
     }
     if (offer) {
       setOfferBadge(offer.badge || "");
@@ -363,7 +365,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       const updatedContact: ContactData = {
         email: contactEmail,
         whatsappUrl: contactWa,
-        whatsappDisplay: contactWaDisplay
+        whatsappDisplay: contactWaDisplay,
+        web3formsKey: contactWeb3formsKey
       };
       await saveContact(updatedContact);
 
@@ -1171,6 +1174,38 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       </div>
                     </div>
 
+                    {/* Dedicated Professional Image Save Button right beneath the Image Upload Area */}
+                    <div className="p-4 bg-[#06b6d4]/5 border border-white/10 hover:border-cyan-500/25 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-[0_0_15px_rgba(6,182,212,0.02)] transition-colors">
+                      <div className="space-y-0.5 text-left">
+                        <span className="block font-sans text-xs font-bold text-white uppercase tracking-wider">
+                          {aboutPortrait && aboutPortrait.startsWith("data:image") ? "⚠️ Pending Profile Image Sync" : "Profile Image Save Control"}
+                        </span>
+                        <p className="font-sans text-[10px] text-gray-400 leading-normal">
+                          {aboutPortrait && aboutPortrait.startsWith("data:image") 
+                            ? "New custom profile picture detected! Click Save Changes to store it permanently."
+                            : "Commit current headshot upload updates permanently to dynamic Cloud Storage."}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        id="save-portrait-btn"
+                        disabled={aboutSaving}
+                        onClick={handleSaveAboutAndStats}
+                        className={`px-5 py-2.5 rounded-xl text-black text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer ${
+                          aboutPortrait && aboutPortrait.startsWith("data:image")
+                            ? "bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] animate-pulse"
+                            : "bg-cyan-400 hover:bg-cyan-300 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                        }`}
+                      >
+                        {aboutSaving ? (
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Check className="h-4.5 w-4.5" />
+                        )}
+                        {aboutSaving ? "Saving Image..." : "Save Changes"}
+                      </button>
+                    </div>
+
                     {/* Curated Presets Library */}
                     <div className="p-4 bg-[#090724]/40 border border-white/10 rounded-2xl">
                       <span className="block font-mono text-[9px] text-[#06b6d4] uppercase tracking-wider font-bold mb-3">
@@ -1278,6 +1313,35 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         onChange={(e) => setContactWaDisplay(e.target.value)}
                         className="w-full px-4.5 py-3 rounded-xl bg-[#030014]/60 border border-white/10 text-white font-sans text-sm focus:border-cyan-400 outline-none transition-colors"
                       />
+                    </div>
+                  </div>
+
+                  {/* Automated Gmail Direct Inbox Notification setup block */}
+                  <div className="p-4.5 bg-gradient-to-r from-purple-500/5 to-cyan-500/5 border border-white/10 rounded-2xl space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Mail className="h-4.5 w-4.5 text-cyan-400 shrink-0" />
+                      <span className="block font-sans text-xs font-bold text-white uppercase tracking-wider">Automated Background Gmail Inbox Relay</span>
+                      <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/10 text-[9px] font-mono text-emerald-400 font-bold uppercase tracking-wide">Secure Sync Gate</span>
+                    </div>
+                    <p className="font-sans text-[11px] text-gray-450 leading-normal">
+                      Receive instant copy notifications on your Gmail <code className="text-cyan-400 font-mono">h.malimran46@gmail.com</code> completely in the background without redirections. Secure your free <a href="https://web3forms.com" target="_blank" rel="noreferrer" className="text-cyan-400 underline hover:text-cyan-300 font-semibold">Web3Forms Access Key</a> and paste below:
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-stretch gap-3">
+                      <input
+                        type="text"
+                        placeholder="e.g. 71e98822-ba30-4e5b-bebe-1f6e0b7cb93b"
+                        value={contactWeb3formsKey}
+                        onChange={(e) => setContactWeb3formsKey(e.target.value)}
+                        className="flex-1 px-4.5 py-3 rounded-xl bg-[#030014]/60 border border-white/10 text-white font-mono text-xs focus:border-cyan-400 outline-none transition-colors placeholder:text-gray-600"
+                      />
+                      <a
+                        href="https://web3forms.com/#start"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="py-3 px-4.5 rounded-xl bg-cyan-500/15 border border-cyan-500/25 text-cyan-300 hover:bg-cyan-500/25 text-xs font-sans font-bold flex items-center justify-center gap-1.5 transition-all text-center"
+                      >
+                        Get Free Web3Forms Key ↗
+                      </a>
                     </div>
                   </div>
 

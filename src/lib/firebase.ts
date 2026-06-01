@@ -148,7 +148,8 @@ export async function seedDatabaseIfEmpty() {
     await setDoc(doc(db, 'content', 'contacts'), {
       email: "h.malimran46@gmail.com",
       whatsappUrl: "https://wa.me/8801700000000",
-      whatsappDisplay: "+880 1700-000000"
+      whatsappDisplay: "+880 1700-000000",
+      web3formsKey: ""
     });
 
     // 5. Seed Services Sub-Collection

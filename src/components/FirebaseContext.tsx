@@ -43,6 +43,7 @@ export interface ContactData {
   email: string;
   whatsappUrl: string;
   whatsappDisplay: string;
+  web3formsKey?: string;
 }
 
 export interface ClientInquiry {
@@ -168,7 +169,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [contact, setContact] = useState<ContactData>({
     email: "h.malimran46@gmail.com",
     whatsappUrl: "https://wa.me/8801700000000",
-    whatsappDisplay: "+880 1700-000000"
+    whatsappDisplay: "+880 1700-000000",
+    web3formsKey: ""
   });
 
   const [services, setServices] = useState<Service[]>(SERVICES_DATA);
