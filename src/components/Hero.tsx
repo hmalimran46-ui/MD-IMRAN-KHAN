@@ -54,15 +54,20 @@ function CinematicBackground() {
       }
     };
 
+    let resizeFrameId: number;
     const handleResize = (entries: ResizeObserverEntry[]) => {
-      for (let entry of entries) {
-        const { width: newWidth, height: newHeight } = entry.contentRect;
-        width = newWidth;
-        height = newHeight;
-        canvas.width = newWidth;
-        canvas.height = newHeight;
-        initParticles(newWidth, newHeight);
-      }
+      if (resizeFrameId) cancelAnimationFrame(resizeFrameId);
+      resizeFrameId = requestAnimationFrame(() => {
+        for (let entry of entries) {
+          const { width: newWidth, height: newHeight } = entry.contentRect;
+          if (newWidth <= 0 || newHeight <= 0) continue;
+          width = newWidth;
+          height = newHeight;
+          if (canvas.width !== newWidth) canvas.width = newWidth;
+          if (canvas.height !== newHeight) canvas.height = newHeight;
+          initParticles(newWidth, newHeight);
+        }
+      });
     };
 
     const observer = new ResizeObserver(handleResize);
@@ -163,6 +168,7 @@ function CinematicBackground() {
 
     return () => {
       observer.disconnect();
+      if (resizeFrameId) cancelAnimationFrame(resizeFrameId);
       cancelAnimationFrame(animationId);
     };
   }, []);

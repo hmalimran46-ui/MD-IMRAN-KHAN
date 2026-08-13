@@ -13,6 +13,7 @@ export default function About() {
 
   // Auxiliary tool arrays to keep the visual high-end styling
   const getDefaultTools = (skillName: string) => {
+    if (!skillName || typeof skillName !== "string") return ["GSC", "Analytics", "Performance"];
     const sl = skillName.toLowerCase();
     if (sl.includes("seo")) {
       return ["Ahrefs", "Semrush", "Screaming Frog", "GSC", "PageSpeed"];

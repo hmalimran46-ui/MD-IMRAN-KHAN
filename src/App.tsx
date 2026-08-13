@@ -14,6 +14,7 @@ import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import AdminPanel from "./components/AdminPanel";
 import { FirebaseProvider } from "./components/FirebaseContext";
+import { SectionErrorBoundary } from "./components/ErrorBoundary";
 import { Award } from "lucide-react";
 
 export default function App() {
@@ -74,20 +75,20 @@ export default function App() {
 
         {/* Core Pages Sections Layout */}
         <main className="relative">
-          <Hero />
-          <About />
-          <Services />
-          <Portfolio />
-          <Offer />
-          <Contact />
+          <SectionErrorBoundary><Hero /></SectionErrorBoundary>
+          <SectionErrorBoundary><About /></SectionErrorBoundary>
+          <SectionErrorBoundary><Services /></SectionErrorBoundary>
+          <SectionErrorBoundary><Portfolio /></SectionErrorBoundary>
+          <SectionErrorBoundary><Offer /></SectionErrorBoundary>
+          <SectionErrorBoundary><Contact /></SectionErrorBoundary>
         </main>
 
         {/* Footer */}
-        <Footer />
+        <SectionErrorBoundary><Footer /></SectionErrorBoundary>
 
         {/* Luxury Overlay Panel control */}
         {isAdminOpen && (
-          <AdminPanel onClose={() => setIsAdminOpen(false)} />
+          <SectionErrorBoundary><AdminPanel onClose={() => setIsAdminOpen(false)} /></SectionErrorBoundary>
         )}
       </div>
     </FirebaseProvider>

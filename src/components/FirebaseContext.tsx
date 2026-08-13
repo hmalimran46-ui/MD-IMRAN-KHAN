@@ -204,12 +204,27 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     const unsubHero = onSnapshot(doc(db, "content", "hero"), (snap) => {
       if (snap.exists()) {
         const raw = snap.data() as Partial<HeroData>;
-        setHero((prev) => ({
-          ...prev,
-          ...raw,
-          titleLines: Array.isArray(raw.titleLines) && raw.titleLines.length > 0 ? raw.titleLines : prev.titleLines,
-          pills: Array.isArray(raw.pills) && raw.pills.length > 0 ? raw.pills : prev.pills
-        }));
+        setHero((prev) => {
+          let titleLines = prev.titleLines;
+          if (Array.isArray(raw.titleLines) && raw.titleLines.length > 0) {
+            titleLines = raw.titleLines.map(s => String(s || ""));
+          } else if (typeof raw.titleLines === "string" && (raw.titleLines as string).trim().length > 0) {
+            titleLines = [(raw.titleLines as string).trim()];
+          }
+
+          let pills = prev.pills;
+          if (Array.isArray(raw.pills) && raw.pills.length > 0) {
+            pills = raw.pills.map(s => String(s || ""));
+          }
+
+          return {
+            ...prev,
+            badgeText: typeof raw.badgeText === "string" ? raw.badgeText : prev.badgeText,
+            bannerUrl: typeof raw.bannerUrl === "string" ? raw.bannerUrl : prev.bannerUrl,
+            titleLines,
+            pills
+          };
+        });
       }
     }, (e) => handleFirestoreError(e, OperationType.GET, "content/hero"));
     unsubs.push(unsubHero);
@@ -218,13 +233,43 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     const unsubAbout = onSnapshot(doc(db, "content", "about"), (snap) => {
       if (snap.exists()) {
         const raw = snap.data() as Partial<AboutData>;
-        setAbout((prev) => ({
-          ...prev,
-          ...raw,
-          skillsList: Array.isArray(raw.skillsList) && raw.skillsList.length > 0 ? raw.skillsList : prev.skillsList,
-          highlights: Array.isArray(raw.highlights) && raw.highlights.length > 0 ? raw.highlights : prev.highlights,
-          stats: Array.isArray(raw.stats) && raw.stats.length > 0 ? raw.stats : prev.stats
-        }));
+        setAbout((prev) => {
+          let skillsList = prev.skillsList;
+          if (Array.isArray(raw.skillsList) && raw.skillsList.length > 0) {
+            skillsList = raw.skillsList.map(s => ({
+              name: String(s?.name || "Skill"),
+              level: typeof s?.level === "number" ? s.level : Number(s?.level) || 80
+            }));
+          }
+
+          let highlights = prev.highlights;
+          if (Array.isArray(raw.highlights) && raw.highlights.length > 0) {
+            highlights = raw.highlights.map(h => String(h || ""));
+          }
+
+          let stats = prev.stats;
+          if (Array.isArray(raw.stats) && raw.stats.length > 0) {
+            stats = raw.stats.map(st => ({
+              id: String(st?.id || Math.random().toString()),
+              value: String(st?.value || "100"),
+              suffix: String(st?.suffix || "+"),
+              label: String(st?.label || "Metric"),
+              description: String(st?.description || "")
+            }));
+          }
+
+          return {
+            ...prev,
+            bioLine1: typeof raw.bioLine1 === "string" ? raw.bioLine1 : prev.bioLine1,
+            bioLine2: typeof raw.bioLine2 === "string" ? raw.bioLine2 : prev.bioLine2,
+            portraitUrl: typeof raw.portraitUrl === "string" ? raw.portraitUrl : prev.portraitUrl,
+            badgeTitle: typeof raw.badgeTitle === "string" ? raw.badgeTitle : prev.badgeTitle,
+            badgeSub: typeof raw.badgeSub === "string" ? raw.badgeSub : prev.badgeSub,
+            skillsList,
+            highlights,
+            stats
+          };
+        });
       }
     }, (e) => handleFirestoreError(e, OperationType.GET, "content/about"));
     unsubs.push(unsubAbout);
@@ -235,7 +280,13 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         const raw = snap.data() as Partial<OfferData>;
         setOffer((prev) => ({
           ...prev,
-          ...raw
+          badge: typeof raw.badge === "string" ? raw.badge : prev.badge,
+          mainTitle: typeof raw.mainTitle === "string" ? raw.mainTitle : prev.mainTitle,
+          promoText: typeof raw.promoText === "string" ? raw.promoText : prev.promoText,
+          promoSubtitle: typeof raw.promoSubtitle === "string" ? raw.promoSubtitle : prev.promoSubtitle,
+          hours: typeof raw.hours === "number" ? raw.hours : prev.hours,
+          minutes: typeof raw.minutes === "number" ? raw.minutes : prev.minutes,
+          seconds: typeof raw.seconds === "number" ? raw.seconds : prev.seconds
         }));
       }
     }, (e) => handleFirestoreError(e, OperationType.GET, "content/offers"));
@@ -247,7 +298,10 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         const raw = snap.data() as Partial<ContactData>;
         setContact((prev) => ({
           ...prev,
-          ...raw
+          email: typeof raw.email === "string" ? raw.email : prev.email,
+          whatsappUrl: typeof raw.whatsappUrl === "string" ? raw.whatsappUrl : prev.whatsappUrl,
+          whatsappDisplay: typeof raw.whatsappDisplay === "string" ? raw.whatsappDisplay : prev.whatsappDisplay,
+          web3formsKey: typeof raw.web3formsKey === "string" ? raw.web3formsKey : prev.web3formsKey
         }));
       }
     }, (e) => handleFirestoreError(e, OperationType.GET, "content/contacts"));
@@ -259,7 +313,14 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       snap.forEach((d) => {
         const data = d.data();
         if (data && data.title) {
-          list.push({ id: d.id, ...data } as Service);
+          list.push({
+            id: d.id,
+            title: String(data.title || ""),
+            description: String(data.description || ""),
+            iconName: String(data.iconName || "Search"),
+            metric: String(data.metric || ""),
+            benefits: Array.isArray(data.benefits) ? data.benefits.map(b => String(b || "")) : []
+          } as Service);
         }
       });
       if (list.length > 0) {
@@ -274,7 +335,22 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       snap.forEach((d) => {
         const data = d.data();
         if (data && data.title) {
-          list.push({ id: d.id, ...data } as CaseStudy);
+          list.push({
+            id: d.id,
+            title: String(data.title || ""),
+            client: String(data.client || ""),
+            category: String(data.category || ""),
+            duration: String(data.duration || ""),
+            challenge: String(data.challenge || ""),
+            strategy: String(data.strategy || ""),
+            highlightMetric: String(data.highlightMetric || ""),
+            highlightLabel: String(data.highlightLabel || ""),
+            results: Array.isArray(data.results) ? data.results.map(r => String(r || "")) : [],
+            chartData: Array.isArray(data.chartData) ? data.chartData.map(cd => ({
+              label: String(cd?.label || ""),
+              value: typeof cd?.value === "number" ? cd.value : Number(cd?.value) || 0
+            })) : []
+          } as CaseStudy);
         }
       });
       if (list.length > 0) {

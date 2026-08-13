@@ -224,7 +224,8 @@ export default function MetricChart({ data, color = "#06b6d4" }: MetricChartProp
         });
 
         const targetData = data[closestIndex];
-        const targetX = steps[closestIndex];
+        if (!targetData) return;
+        const targetX = steps[closestIndex] || 0;
         const targetY = yScale(targetData.value);
 
         hoverLine
