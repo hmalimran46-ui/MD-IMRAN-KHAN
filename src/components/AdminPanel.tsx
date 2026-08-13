@@ -337,13 +337,31 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     setSaveStatus("Saving about and stats data...");
     setAboutSaving(true);
     try {
-      const parsedStats = JSON.parse(statsJson);
-      const parsedSkills = JSON.parse(skillsJson);
-      const parsedHighlights = JSON.parse(highlightsJson);
+      let parsedStats = [];
+      let parsedSkills = [];
+      let parsedHighlights = [];
+
+      try {
+        parsedStats = JSON.parse(statsJson || "[]");
+      } catch (_) {
+        throw new Error("Invalid Statistics JSON syntax. Please check array brackets and quotation marks.");
+      }
+
+      try {
+        parsedSkills = JSON.parse(skillsJson || "[]");
+      } catch (_) {
+        throw new Error("Invalid Skills JSON syntax. Please check array brackets and quotation marks.");
+      }
+
+      try {
+        parsedHighlights = JSON.parse(highlightsJson || "[]");
+      } catch (_) {
+        throw new Error("Invalid Highlights JSON syntax. Please check array brackets and quotation marks.");
+      }
 
       let resolvedPortraitUrl = aboutPortrait;
       if (aboutPortrait && aboutPortrait.startsWith("data:image")) {
-        setSaveStatus("Uploading profile image to Firebase Cloud Storage...");
+        setSaveStatus("Uploading & saving profile image...");
         const fileName = `about/portrait_imran_${Date.now()}.jpg`;
         resolvedPortraitUrl = await uploadImageToStorage(aboutPortrait, fileName);
       }
@@ -370,17 +388,18 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       };
       await saveContact(updatedContact);
 
-      // Set state with final cloud URL to prevent re-upload on next saves
+      // Set state with final cloud/doc URL to prevent re-upload on next saves
       setAboutPortrait(resolvedPortraitUrl);
 
-      setSaveStatus("About bio and statistics synced dynamically!");
-      setSuccessAbout("Profile Image Saved Successfully");
+      setSaveStatus("About bio and profile image synced dynamically!");
+      setSuccessAbout("Saved Successfully");
       setTimeout(() => setSaveStatus(null), 3500);
       setTimeout(() => setSuccessAbout(null), 5000);
     } catch (e: any) {
-      setSaveStatus(`Error formatting: ${e.message}. Verify strict JSON array shapes.`);
-      setErrorAbout(e.message || "Failed to format properties or update Bio configuration. Ensure JSON values are valid arrays.");
-      setTimeout(() => setSaveStatus(null), 5000);
+      console.error("Save About Error:", e);
+      setSaveStatus(`Error saving: ${e.message}`);
+      setErrorAbout(e.message || "Failed to save profile configuration. Ensure JSON values are valid arrays.");
+      setTimeout(() => setSaveStatus(null), 6000);
     } finally {
       setAboutSaving(false);
     }

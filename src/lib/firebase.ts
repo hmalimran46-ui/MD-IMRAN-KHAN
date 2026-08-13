@@ -30,10 +30,24 @@ export const auth: Auth = getAuth(app);
 export const storage = getStorage(app);
 
 // Upload string (Base64 data URL) to Firebase Storage and retrieve the download URL.
+// Includes a strict timeout and fallback mechanism to ensure saving never hangs or blocks.
 export async function uploadImageToStorage(dataUrl: string, path: string): Promise<string> {
-  const storageRef = ref(storage, path);
-  await uploadString(storageRef, dataUrl, 'data_url');
-  return await getDownloadURL(storageRef);
+  try {
+    const storageRef = ref(storage, path);
+    const uploadTask = (async () => {
+      await uploadString(storageRef, dataUrl, 'data_url');
+      return await getDownloadURL(storageRef);
+    })();
+
+    const timeoutTask = new Promise<string>((_, reject) => {
+      setTimeout(() => reject(new Error("Storage upload timeout")), 3500);
+    });
+
+    return await Promise.race([uploadTask, timeoutTask]);
+  } catch (err) {
+    console.warn("Firebase Storage upload fallback to direct database image store:", err);
+    return dataUrl;
+  }
 }
 
 // Operational Types as specified in the security/rules skill guideline
