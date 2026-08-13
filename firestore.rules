@@ -2,8 +2,18 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Website Content Management (hero, about, offers, contacts, services, portfolio)
+    // Website Content Management (hero, about, offers, contacts)
     match /content/{document=**} {
+      allow read, write: if true;
+    }
+
+    // Services Collection
+    match /services/{document=**} {
+      allow read, write: if true;
+    }
+
+    // Portfolio Collection
+    match /portfolio/{document=**} {
       allow read, write: if true;
     }
 

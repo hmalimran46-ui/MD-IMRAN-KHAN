@@ -307,8 +307,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     }, (e) => handleFirestoreError(e, OperationType.GET, "content/contacts"));
     unsubs.push(unsubContact);
 
-    // Attach Snapshot for Services Sub-collection
-    const unsubServices = onSnapshot(collection(db, "content", "services"), (snap) => {
+    // Attach Snapshot for Services Collection
+    const unsubServices = onSnapshot(collection(db, "services"), (snap) => {
       const list: Service[] = [];
       snap.forEach((d) => {
         const data = d.data();
@@ -326,11 +326,11 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       if (list.length > 0) {
         setServices(list);
       }
-    }, (e) => handleFirestoreError(e, OperationType.GET, "content/services"));
+    }, (e) => handleFirestoreError(e, OperationType.GET, "services"));
     unsubs.push(unsubServices);
 
-    // Attach Snapshot for Case Studies Sub-collection
-    const unsubPort = onSnapshot(collection(db, "content", "portfolio"), (snap) => {
+    // Attach Snapshot for Case Studies Collection
+    const unsubPort = onSnapshot(collection(db, "portfolio"), (snap) => {
       const list: CaseStudy[] = [];
       snap.forEach((d) => {
         const data = d.data();
@@ -356,7 +356,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       if (list.length > 0) {
         setPortfolio(list);
       }
-    }, (e) => handleFirestoreError(e, OperationType.GET, "content/portfolio"));
+    }, (e) => handleFirestoreError(e, OperationType.GET, "portfolio"));
     unsubs.push(unsubPort);
 
     // Monitor Firebase Authentication State
@@ -531,36 +531,36 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
   const saveService = async (service: Service) => {
     try {
-      await setDoc(doc(db, "content", "services", service.id), service);
+      await setDoc(doc(db, "services", service.id), service);
     } catch (e) {
-      handleFirestoreError(e, OperationType.WRITE, `content/services/${service.id}`);
+      handleFirestoreError(e, OperationType.WRITE, `services/${service.id}`);
       throw e;
     }
   };
 
   const removeService = async (id: string) => {
     try {
-      await deleteDoc(doc(db, "content", "services", id));
+      await deleteDoc(doc(db, "services", id));
     } catch (e) {
-      handleFirestoreError(e, OperationType.DELETE, `content/services/${id}`);
+      handleFirestoreError(e, OperationType.DELETE, `services/${id}`);
       throw e;
     }
   };
 
   const saveProject = async (project: CaseStudy) => {
     try {
-      await setDoc(doc(db, "content", "portfolio", project.id), project);
+      await setDoc(doc(db, "portfolio", project.id), project);
     } catch (e) {
-      handleFirestoreError(e, OperationType.WRITE, `content/portfolio/${project.id}`);
+      handleFirestoreError(e, OperationType.WRITE, `portfolio/${project.id}`);
       throw e;
     }
   };
 
   const removeProject = async (id: string) => {
     try {
-      await deleteDoc(doc(db, "content", "portfolio", id));
+      await deleteDoc(doc(db, "portfolio", id));
     } catch (e) {
-      handleFirestoreError(e, OperationType.DELETE, `content/portfolio/${id}`);
+      handleFirestoreError(e, OperationType.DELETE, `portfolio/${id}`);
       throw e;
     }
   };

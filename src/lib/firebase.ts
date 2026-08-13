@@ -166,14 +166,14 @@ export async function seedDatabaseIfEmpty() {
       web3formsKey: ""
     });
 
-    // 5. Seed Services Sub-Collection
+    // 5. Seed Services Collection
     for (const service of SERVICES_DATA) {
-      await setDoc(doc(db, 'content', 'services', service.id), service);
+      await setDoc(doc(db, 'services', service.id), service);
     }
 
-    // 6. Seed Case Studies Sub-Collection
+    // 6. Seed Case Studies Collection
     for (const study of CASE_STUDIES_DATA) {
-      await setDoc(doc(db, 'content', 'portfolio', study.id), study);
+      await setDoc(doc(db, 'portfolio', study.id), study);
     }
 
     console.log("Seeding procedure completed successfully.");

@@ -71,7 +71,7 @@ export default function App() {
         <div className="absolute top-0 left-0 right-0 h-[800px] bg-[radial-gradient(ellipse_120%_60%_at_50%_-10%,rgba(6,182,212,0.12)_0%,transparent_100%)] pointer-events-none -z-10" />
 
         {/* Sticky Top Navbar with Admin Panel custom trigger */}
-        <Navbar onOpenAdmin={() => setIsAdminOpen(true)} />
+        <SectionErrorBoundary><Navbar onOpenAdmin={() => setIsAdminOpen(true)} /></SectionErrorBoundary>
 
         {/* Core Pages Sections Layout */}
         <main className="relative">
