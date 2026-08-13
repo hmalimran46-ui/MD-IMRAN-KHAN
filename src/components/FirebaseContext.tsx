@@ -177,75 +177,69 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [portfolio, setPortfolio] = useState<CaseStudy[]>(CASE_STUDIES_DATA);
   const [messages, setMessages] = useState<ClientInquiry[]>([]);
 
-  // 1. Auth management & Seeding database trigger on boot
+  // 1. Load Firestore Data in real-time immediately on mount
   useEffect(() => {
     let unsubs: (() => void)[] = [];
 
-    // Trigger auto-seeding in parallel
-    seedDatabaseIfEmpty().then(() => {
-      // 2. Load Firestore Data in real-time
-      // Attach Snapshot for Hero Singleton Document
-      const unsubHero = onSnapshot(doc(db, "content", "hero"), (snap) => {
-        if (snap.exists()) {
-          setHero(snap.data() as HeroData);
-        }
-      }, (e) => handleFirestoreError(e, OperationType.GET, "content/hero"));
-      unsubs.push(unsubHero);
+    // Trigger auto-seeding in parallel without blocking snapshot listeners
+    seedDatabaseIfEmpty().catch((e) => console.warn("Background seed check info:", e));
 
-      // Attach Snapshot for About Singleton Document
-      const unsubAbout = onSnapshot(doc(db, "content", "about"), (snap) => {
-        if (snap.exists()) {
-          const raw = snap.data() as AboutData;
-          if (raw && raw.bioLine1) {
-            raw.bioLine1 = raw.bioLine1
-              .replace(/Mohammad Al Imran/g, "MD: IMRAN KHAN")
-              .replace(/Al Imran/g, "MD: IMRAN KHAN");
-          }
-          setAbout(raw);
-        }
-      }, (e) => handleFirestoreError(e, OperationType.GET, "content/about"));
-      unsubs.push(unsubAbout);
+    // Attach Snapshot for Hero Singleton Document
+    const unsubHero = onSnapshot(doc(db, "content", "hero"), (snap) => {
+      if (snap.exists()) {
+        setHero(snap.data() as HeroData);
+      }
+    }, (e) => handleFirestoreError(e, OperationType.GET, "content/hero"));
+    unsubs.push(unsubHero);
 
-      // Attach Snapshot for Offers Singleton Document
-      const unsubOffer = onSnapshot(doc(db, "content", "offers"), (snap) => {
-        if (snap.exists()) {
-          setOffer(snap.data() as OfferData);
-        }
-      }, (e) => handleFirestoreError(e, OperationType.GET, "content/offers"));
-      unsubs.push(unsubOffer);
+    // Attach Snapshot for About Singleton Document
+    const unsubAbout = onSnapshot(doc(db, "content", "about"), (snap) => {
+      if (snap.exists()) {
+        const raw = snap.data() as AboutData;
+        setAbout(raw);
+      }
+    }, (e) => handleFirestoreError(e, OperationType.GET, "content/about"));
+    unsubs.push(unsubAbout);
 
-      // Attach Snapshot for Contacts Singleton Document
-      const unsubContact = onSnapshot(doc(db, "content", "contacts"), (snap) => {
-        if (snap.exists()) {
-          setContact(snap.data() as ContactData);
-        }
-      }, (e) => handleFirestoreError(e, OperationType.GET, "content/contacts"));
-      unsubs.push(unsubContact);
+    // Attach Snapshot for Offers Singleton Document
+    const unsubOffer = onSnapshot(doc(db, "content", "offers"), (snap) => {
+      if (snap.exists()) {
+        setOffer(snap.data() as OfferData);
+      }
+    }, (e) => handleFirestoreError(e, OperationType.GET, "content/offers"));
+    unsubs.push(unsubOffer);
 
-      // Attach Snapshot for Services Sub-collection
-      const unsubServices = onSnapshot(collection(db, "content", "services"), (snap) => {
-        const list: Service[] = [];
-        snap.forEach((d) => {
-          list.push({ id: d.id, ...d.data() } as Service);
-        });
-        if (list.length > 0) {
-          setServices(list);
-        }
-      }, (e) => handleFirestoreError(e, OperationType.GET, "content/services"));
-      unsubs.push(unsubServices);
+    // Attach Snapshot for Contacts Singleton Document
+    const unsubContact = onSnapshot(doc(db, "content", "contacts"), (snap) => {
+      if (snap.exists()) {
+        setContact(snap.data() as ContactData);
+      }
+    }, (e) => handleFirestoreError(e, OperationType.GET, "content/contacts"));
+    unsubs.push(unsubContact);
 
-      // Attach Snapshot for Case Studies Sub-collection
-      const unsubPort = onSnapshot(collection(db, "content", "portfolio"), (snap) => {
-        const list: CaseStudy[] = [];
-        snap.forEach((d) => {
-          list.push({ id: d.id, ...d.data() } as CaseStudy);
-        });
-        if (list.length > 0) {
-          setPortfolio(list);
-        }
-      }, (e) => handleFirestoreError(e, OperationType.GET, "content/portfolio"));
-      unsubs.push(unsubPort);
-    });
+    // Attach Snapshot for Services Sub-collection
+    const unsubServices = onSnapshot(collection(db, "content", "services"), (snap) => {
+      const list: Service[] = [];
+      snap.forEach((d) => {
+        list.push({ id: d.id, ...d.data() } as Service);
+      });
+      if (list.length > 0) {
+        setServices(list);
+      }
+    }, (e) => handleFirestoreError(e, OperationType.GET, "content/services"));
+    unsubs.push(unsubServices);
+
+    // Attach Snapshot for Case Studies Sub-collection
+    const unsubPort = onSnapshot(collection(db, "content", "portfolio"), (snap) => {
+      const list: CaseStudy[] = [];
+      snap.forEach((d) => {
+        list.push({ id: d.id, ...d.data() } as CaseStudy);
+      });
+      if (list.length > 0) {
+        setPortfolio(list);
+      }
+    }, (e) => handleFirestoreError(e, OperationType.GET, "content/portfolio"));
+    unsubs.push(unsubPort);
 
     // Monitor Firebase Authentication State
     const unsubAuth = onAuthStateChanged(auth, (currentUser) => {
@@ -388,6 +382,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const saveHero = async (data: HeroData) => {
     try {
       await setDoc(doc(db, "content", "hero"), data);
+      setHero(data);
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, "content/hero");
       throw e;
@@ -397,6 +392,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const saveAbout = async (data: AboutData) => {
     try {
       await setDoc(doc(db, "content", "about"), data);
+      setAbout(data);
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, "content/about");
       throw e;
@@ -406,6 +402,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const saveOffer = async (data: OfferData) => {
     try {
       await setDoc(doc(db, "content", "offers"), data);
+      setOffer(data);
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, "content/offers");
       throw e;
@@ -415,6 +412,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const saveContact = async (data: ContactData) => {
     try {
       await setDoc(doc(db, "content", "contacts"), data);
+      setContact(data);
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, "content/contacts");
       throw e;
