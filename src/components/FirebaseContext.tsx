@@ -92,34 +92,50 @@ interface FirebaseContextType {
 
 const FirebaseContext = createContext<FirebaseContextType | undefined>(undefined);
 
+// Safe LocalStorage helpers to prevent DOMException in restricted browser environments
+function getStoredUser(): { email: string; uid: string } | null {
+  try {
+    const stored = localStorage.getItem("admin_user");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed && parsed.email) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn("Storage access restricted:", e);
+  }
+  return null;
+}
+
+function setStoredUser(data: { email: string | null; uid: string }) {
+  try {
+    localStorage.setItem("admin_user", JSON.stringify(data));
+  } catch (e) {
+    console.warn("Storage access write restricted:", e);
+  }
+}
+
+function removeStoredUser() {
+  try {
+    localStorage.removeItem("admin_user");
+  } catch (e) {
+    console.warn("Storage access remove restricted:", e);
+  }
+}
+
 export function FirebaseProvider({ children }: { children: ReactNode }) {
   // Authentication states
   const [user, setUser] = useState<User | null>(() => {
-    const stored = localStorage.getItem("admin_user");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (parsed && parsed.email) {
-          return parsed as User;
-        }
-      } catch (e) {}
-    }
-    return null;
+    const stored = getStoredUser();
+    return stored ? (stored as unknown as User) : null;
   });
   const [isAdminUser, setIsAdminUser] = useState<boolean>(() => {
-    const stored = localStorage.getItem("admin_user");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (parsed && parsed.email) {
-          return true;
-        }
-      } catch (e) {}
-    }
-    return false;
+    const stored = getStoredUser();
+    return !!stored;
   });
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(() => {
-    const stored = localStorage.getItem("admin_user");
+    const stored = getStoredUser();
     return !stored;
   });
   const [authError, setAuthError] = useState<string | null>(null);
@@ -187,7 +203,13 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     // Attach Snapshot for Hero Singleton Document
     const unsubHero = onSnapshot(doc(db, "content", "hero"), (snap) => {
       if (snap.exists()) {
-        setHero(snap.data() as HeroData);
+        const raw = snap.data() as Partial<HeroData>;
+        setHero((prev) => ({
+          ...prev,
+          ...raw,
+          titleLines: Array.isArray(raw.titleLines) && raw.titleLines.length > 0 ? raw.titleLines : prev.titleLines,
+          pills: Array.isArray(raw.pills) && raw.pills.length > 0 ? raw.pills : prev.pills
+        }));
       }
     }, (e) => handleFirestoreError(e, OperationType.GET, "content/hero"));
     unsubs.push(unsubHero);
@@ -195,8 +217,14 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     // Attach Snapshot for About Singleton Document
     const unsubAbout = onSnapshot(doc(db, "content", "about"), (snap) => {
       if (snap.exists()) {
-        const raw = snap.data() as AboutData;
-        setAbout(raw);
+        const raw = snap.data() as Partial<AboutData>;
+        setAbout((prev) => ({
+          ...prev,
+          ...raw,
+          skillsList: Array.isArray(raw.skillsList) && raw.skillsList.length > 0 ? raw.skillsList : prev.skillsList,
+          highlights: Array.isArray(raw.highlights) && raw.highlights.length > 0 ? raw.highlights : prev.highlights,
+          stats: Array.isArray(raw.stats) && raw.stats.length > 0 ? raw.stats : prev.stats
+        }));
       }
     }, (e) => handleFirestoreError(e, OperationType.GET, "content/about"));
     unsubs.push(unsubAbout);
@@ -204,7 +232,11 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     // Attach Snapshot for Offers Singleton Document
     const unsubOffer = onSnapshot(doc(db, "content", "offers"), (snap) => {
       if (snap.exists()) {
-        setOffer(snap.data() as OfferData);
+        const raw = snap.data() as Partial<OfferData>;
+        setOffer((prev) => ({
+          ...prev,
+          ...raw
+        }));
       }
     }, (e) => handleFirestoreError(e, OperationType.GET, "content/offers"));
     unsubs.push(unsubOffer);
@@ -212,7 +244,11 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     // Attach Snapshot for Contacts Singleton Document
     const unsubContact = onSnapshot(doc(db, "content", "contacts"), (snap) => {
       if (snap.exists()) {
-        setContact(snap.data() as ContactData);
+        const raw = snap.data() as Partial<ContactData>;
+        setContact((prev) => ({
+          ...prev,
+          ...raw
+        }));
       }
     }, (e) => handleFirestoreError(e, OperationType.GET, "content/contacts"));
     unsubs.push(unsubContact);
@@ -221,7 +257,10 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     const unsubServices = onSnapshot(collection(db, "content", "services"), (snap) => {
       const list: Service[] = [];
       snap.forEach((d) => {
-        list.push({ id: d.id, ...d.data() } as Service);
+        const data = d.data();
+        if (data && data.title) {
+          list.push({ id: d.id, ...data } as Service);
+        }
       });
       if (list.length > 0) {
         setServices(list);
@@ -233,7 +272,10 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     const unsubPort = onSnapshot(collection(db, "content", "portfolio"), (snap) => {
       const list: CaseStudy[] = [];
       snap.forEach((d) => {
-        list.push({ id: d.id, ...d.data() } as CaseStudy);
+        const data = d.data();
+        if (data && data.title) {
+          list.push({ id: d.id, ...data } as CaseStudy);
+        }
       });
       if (list.length > 0) {
         setPortfolio(list);
@@ -248,9 +290,9 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       if (currentUser) {
         setUser(currentUser);
         setIsAuthLoading(false);
-        const isEmailMatch = currentUser.email === "h.malimran46@gmail.com" || currentUser.email?.endsWith("@gmail.com"); // Allow user gmail too for local developer preview access
+        const isEmailMatch = currentUser.email === "h.malimran46@gmail.com" || currentUser.email?.endsWith("@gmail.com");
         setIsAdminUser(!!isEmailMatch);
-        localStorage.setItem("admin_user", JSON.stringify({ email: currentUser.email, uid: currentUser.uid }));
+        setStoredUser({ email: currentUser.email, uid: currentUser.uid });
 
         // Attach listener for Secure Client Messages Inbox for Admin only
         const unsubMsgs = onSnapshot(collection(db, "messages"), (snap) => {
@@ -258,7 +300,6 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           snap.forEach((d) => {
             mList.push({ id: d.id, ...d.data() } as ClientInquiry);
           });
-          // Sort messages by descending order (newest first)
           mList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           setMessages(mList);
         }, (e) => {
@@ -266,31 +307,24 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         });
         unsubs.push(unsubMsgs);
       } else {
-        // Fallback checks for active storage persistence
-        const stored = localStorage.getItem("admin_user");
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            if (parsed && parsed.email) {
-              setUser(parsed as User);
-              setIsAdminUser(true);
-              setIsAuthLoading(false);
-              
-              // Attach Messages listener for local storage active session as well
-              const unsubMsgs = onSnapshot(collection(db, "messages"), (snap) => {
-                const mList: ClientInquiry[] = [];
-                snap.forEach((d) => {
-                  mList.push({ id: d.id, ...d.data() } as ClientInquiry);
-                });
-                mList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                setMessages(mList);
-              }, (e) => {
-                console.warn("Unprivileged query logged for client messages listener in offline slot.", e.message);
-              });
-              unsubs.push(unsubMsgs);
-              return;
-            }
-          } catch (e) {}
+        const stored = getStoredUser();
+        if (stored && stored.email) {
+          setUser(stored as unknown as User);
+          setIsAdminUser(true);
+          setIsAuthLoading(false);
+          
+          const unsubMsgs = onSnapshot(collection(db, "messages"), (snap) => {
+            const mList: ClientInquiry[] = [];
+            snap.forEach((d) => {
+              mList.push({ id: d.id, ...d.data() } as ClientInquiry);
+            });
+            mList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            setMessages(mList);
+          }, (e) => {
+            console.warn("Unprivileged query logged for client messages listener in offline slot.", e.message);
+          });
+          unsubs.push(unsubMsgs);
+          return;
         }
 
         setUser(null);
@@ -323,7 +357,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       setUser(mockUser);
       setIsAdminUser(true);
       setIsAuthLoading(false);
-      localStorage.setItem("admin_user", JSON.stringify({ email: mockUser.email, uid: mockUser.uid }));
+      setStoredUser({ email: mockUser.email, uid: mockUser.uid });
 
       // Background sign-in with Firebase Auth, errors won't block UI access
       signInWithEmailAndPassword(auth, email, pass).catch((e) => {
@@ -338,7 +372,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       setUser(currentUser);
       const isEmailMatch = currentUser.email === "h.malimran46@gmail.com" || currentUser.email?.endsWith("@gmail.com");
       setIsAdminUser(!!isEmailMatch);
-      localStorage.setItem("admin_user", JSON.stringify({ email: currentUser.email, uid: currentUser.uid }));
+      setStoredUser({ email: currentUser.email, uid: currentUser.uid });
     } catch (e: any) {
       setAuthError(e.message || "Failed to authenticate. Please check credentials.");
       throw e;
@@ -347,7 +381,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     setAuthError(null);
-    localStorage.removeItem("admin_user");
+    removeStoredUser();
     setUser(null);
     setIsAdminUser(false);
     try {
