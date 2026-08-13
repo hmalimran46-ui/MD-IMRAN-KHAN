@@ -94,6 +94,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [aboutBio1, setAboutBio1] = useState("");
   const [aboutBio2, setAboutBio2] = useState("");
   const [aboutPortrait, setAboutPortrait] = useState("");
+  const [isPortraitDirty, setIsPortraitDirty] = useState(false);
   const [aboutBadgeTitle, setAboutBadgeTitle] = useState("");
   const [aboutBadgeSub, setAboutBadgeSub] = useState("");
   const [skillsJson, setSkillsJson] = useState("");
@@ -178,6 +179,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       setAboutBio1(about.bioLine1 || "");
       setAboutBio2(about.bioLine2 || "");
       setAboutPortrait(about.portraitUrl || "");
+      setIsPortraitDirty(false);
       setAboutBadgeTitle(about.badgeTitle || "");
       setAboutBadgeSub(about.badgeSub || "");
       setSkillsJson(JSON.stringify(about.skillsList || [], null, 2));
@@ -390,6 +392,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
       // Set state with final cloud/doc URL to prevent re-upload on next saves
       setAboutPortrait(resolvedPortraitUrl);
+      setIsPortraitDirty(false);
 
       setSaveStatus("About bio and profile image synced dynamically!");
       setSuccessAbout("Saved Successfully");
@@ -1125,7 +1128,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                             e.stopPropagation();
                             const files = e.dataTransfer.files;
                             if (files && files[0]) {
-                              handleOptimizedImageUpload(files[0], "portrait", setAboutPortrait);
+                              handleOptimizedImageUpload(files[0], "portrait", (url) => {
+                                setAboutPortrait(url);
+                                setIsPortraitDirty(true);
+                              });
                             }
                           }}
                           onClick={() => {
@@ -1136,7 +1142,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                               const target = e.target as HTMLInputElement;
                               const files = target.files;
                               if (files && files[0]) {
-                                handleOptimizedImageUpload(files[0], "portrait", setAboutPortrait);
+                                handleOptimizedImageUpload(files[0], "portrait", (url) => {
+                                  setAboutPortrait(url);
+                                  setIsPortraitDirty(true);
+                                });
                               }
                             };
                             fileInput.click();
@@ -1197,12 +1206,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     <div className="p-4 bg-[#06b6d4]/5 border border-white/10 hover:border-cyan-500/25 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-[0_0_15px_rgba(6,182,212,0.02)] transition-colors">
                       <div className="space-y-0.5 text-left">
                         <span className="block font-sans text-xs font-bold text-white uppercase tracking-wider">
-                          {aboutPortrait && aboutPortrait.startsWith("data:image") ? "⚠️ Pending Profile Image Sync" : "Profile Image Save Control"}
+                          {isPortraitDirty ? "⚠️ Pending Profile Image Sync" : "✅ Profile Image Saved & Active"}
                         </span>
                         <p className="font-sans text-[10px] text-gray-400 leading-normal">
-                          {aboutPortrait && aboutPortrait.startsWith("data:image") 
+                          {isPortraitDirty 
                             ? "New custom profile picture detected! Click Save Changes to store it permanently."
-                            : "Commit current headshot upload updates permanently to dynamic Cloud Storage."}
+                            : "Your profile picture is saved and active across all devices."}
                         </p>
                       </div>
                       <button
@@ -1211,7 +1220,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         disabled={aboutSaving}
                         onClick={handleSaveAboutAndStats}
                         className={`px-5 py-2.5 rounded-xl text-black text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer ${
-                          aboutPortrait && aboutPortrait.startsWith("data:image")
+                          isPortraitDirty
                             ? "bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] animate-pulse"
                             : "bg-cyan-400 hover:bg-cyan-300 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)]"
                         }`}
@@ -1221,7 +1230,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         ) : (
                           <Check className="h-4.5 w-4.5" />
                         )}
-                        {aboutSaving ? "Saving Image..." : "Save Changes"}
+                        {aboutSaving ? "Saving Image..." : isPortraitDirty ? "Save Changes" : "Saved"}
                       </button>
                     </div>
 
@@ -1234,7 +1243,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         {visualPresets.map((preset) => (
                           <div
                             key={preset.title}
-                            onClick={() => setAboutPortrait(preset.url)}
+                            onClick={() => {
+                              setAboutPortrait(preset.url);
+                              setIsPortraitDirty(true);
+                            }}
                             className={`p-2 rounded-xl border transition-all duration-300 text-center group flex flex-col items-center justify-between cursor-pointer ${
                               aboutPortrait === preset.url
                                 ? "bg-cyan-500/10 border-cyan-400"
